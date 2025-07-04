@@ -11,9 +11,9 @@ fn main() {
 
     for stream in listener.incoming() {
         match stream {
-            Ok(_stream) => {
+            Ok(stream) => {
                 println!("accepted new connection");
-                handle_connection(_stream);
+                handle_connection(stream);
             }
             Err(e) => {
                 println!("error: {}", e);
@@ -27,5 +27,20 @@ fn handle_connection(mut stream: TcpStream) {
 
     let respone = "+PONG\r\n";
 
-    stream.write_all(respone.as_bytes()).unwrap();
+    loop {
+        match stream.read(&mut [0; 128]) {
+            Ok(0) => {
+                println!("No more bytes to read");
+                break;
+            }
+            Ok(num) => {
+                println!("Read {} bytes", num);
+                stream.write(respone.as_bytes()).unwrap();
+            }
+            Err(e) => {
+                println!("error: {}", e);
+                break;
+            }
+        }
+    }
 }
